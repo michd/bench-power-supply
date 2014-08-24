@@ -42,7 +42,6 @@ void setup() {
 void loop() {
   writeNumber(readVoltage(), 0);
   writeNumber(readCurrent(), 1);
-  
   // Yeah, this isn't going to stay.
   delay(LED_DISPLAY_UPDATE_INTERVAL);
 }
@@ -123,13 +122,13 @@ void writeNumber(float number, int displayIndex) {
   
   // Don't display a padding 0
   if (tens > 0) {
-    lc.setDigit(0, (displayIndex * 4) + 3, tens, false);
+    lc.setDigit(0, (displayIndex * 4) + 0, tens, false);
   } else {
-    lc.setChar(0, (displayIndex * 4) + 3, (byte)127, false);
+    lc.setChar(0, (displayIndex * 4) + 0, (byte)127, false);
   }
-  lc.setDigit(0, (displayIndex * 4) + 2, ones, true);
-  lc.setDigit(0, (displayIndex * 4) + 1, tenths, false);
-  lc.setDigit(0, (displayIndex * 4) + 0, hundredths, false);
+  lc.setDigit(0, (displayIndex * 4) + 1, ones, true);
+  lc.setDigit(0, (displayIndex * 4) + 2, tenths, false);
+  lc.setDigit(0, (displayIndex * 4) + 3, hundredths, false);
  
   // Turn the display back on 
   lc.shutdown(0, false);
