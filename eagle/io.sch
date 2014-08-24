@@ -4355,8 +4355,6 @@ EC12E series with push-on switch</description>
 <pad name="B" x="2.5" y="-7.5" drill="1" shape="square"/>
 <pad name="D" x="-2.5" y="7" drill="1" shape="square"/>
 <pad name="E" x="2.5" y="7" drill="1" shape="square"/>
-<pad name="GND1" x="-6.1" y="0" drill="2.2" shape="square"/>
-<pad name="GND2" x="6.1" y="0" drill="2.2" shape="square"/>
 <text x="-2.5" y="8.5" size="1.27" layer="25">&gt;NAME</text>
 <text x="3.5" y="-9" size="1.27" layer="27" rot="R180">&gt;VALUE</text>
 </package>
@@ -4393,13 +4391,6 @@ EC12E series with push-on switch</description>
 <pin name="1" x="5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1" rot="R180"/>
 <pin name="2" x="-5.08" y="0" visible="off" length="short" direction="pas" swaplevel="1"/>
 </symbol>
-<symbol name="GEHAEUSEANSCHLUSS">
-<wire x1="0" y1="0" x2="0.9525" y2="0" width="0.254" layer="94"/>
-<wire x1="1.5875" y1="0" x2="2.2225" y2="0" width="0.254" layer="94"/>
-<wire x1="2.8575" y1="0" x2="3.4925" y2="0" width="0.254" layer="94"/>
-<wire x1="4.1275" y1="0" x2="5.08" y2="0" width="0.254" layer="94"/>
-<pin name="G" x="0" y="0" visible="pad" length="point" direction="pas"/>
-</symbol>
 </symbols>
 <devicesets>
 <deviceset name="EC12E_SW" prefix="SW">
@@ -4407,8 +4398,6 @@ EC12E series with push-on switch</description>
 <gates>
 <gate name="G$1" symbol="ENCODER" x="-10.16" y="-2.54" addlevel="always"/>
 <gate name="G$2" symbol="TASTER" x="10.16" y="5.08" addlevel="always"/>
-<gate name="G$3" symbol="GEHAEUSEANSCHLUSS" x="10.16" y="-5.08" addlevel="request"/>
-<gate name="G$4" symbol="GEHAEUSEANSCHLUSS" x="10.16" y="-7.62" addlevel="request"/>
 </gates>
 <devices>
 <device name="" package="ALPS_EC12E_SW">
@@ -4418,8 +4407,6 @@ EC12E series with push-on switch</description>
 <connect gate="G$1" pin="C" pad="C"/>
 <connect gate="G$2" pin="1" pad="D"/>
 <connect gate="G$2" pin="2" pad="E"/>
-<connect gate="G$3" pin="G" pad="GND1"/>
-<connect gate="G$4" pin="G" pad="GND2"/>
 </connects>
 <technologies>
 <technology name="">
