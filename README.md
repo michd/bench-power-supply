@@ -1,6 +1,6 @@
 # Bench power supply
 
-I'm working (currently just researching and prototyping) on developing my own bench power supply. This repository will mostly act as a working directory before it gets anywhere near completiong, so expect stuff to move around a lot.
+I'm working (currently just researching and prototyping) on developing my own bench power supply. This repository will mostly act as a working directory before it gets anywhere near completion, so expect stuff to move around a lot.
 
 ## Some requirements / desired features for the supply:
 
