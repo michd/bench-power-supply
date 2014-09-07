@@ -4549,7 +4549,7 @@ EC12E series with push-on switch</description>
 <wire x1="20.32" y1="53.34" x2="20.32" y2="58.42" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$18" class="0">
+<net name="N$24" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="DIN"/>
 <wire x1="22.86" y1="2.54" x2="22.86" y2="15.24" width="0.1524" layer="91"/>
@@ -4595,7 +4595,7 @@ EC12E series with push-on switch</description>
 <wire x1="180.34" y1="53.34" x2="180.34" y2="38.1" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$5" class="0">
+<net name="N$55" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="DIG3"/>
 <pinref part="LED1" gate="DIG1" pin="CA@4"/>
@@ -4611,7 +4611,7 @@ EC12E series with push-on switch</description>
 <wire x1="215.9" y1="48.26" x2="215.9" y2="38.1" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$7" class="0">
+<net name="N$31" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="DIG5"/>
 <pinref part="LED2" gate="DIG1" pin="CA@2"/>
@@ -4635,7 +4635,7 @@ EC12E series with push-on switch</description>
 <wire x1="223.52" y1="40.64" x2="223.52" y2="38.1" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$10" class="0">
+<net name="N$29" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="SEGA"/>
 <wire x1="121.92" y1="38.1" x2="147.32" y2="38.1" width="0.1524" layer="91"/>
@@ -4719,7 +4719,7 @@ EC12E series with push-on switch</description>
 <junction x="177.8" y="2.54"/>
 </segment>
 </net>
-<net name="N$16" class="0">
+<net name="N$19" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="SEGG"/>
 <wire x1="121.92" y1="22.86" x2="132.08" y2="22.86" width="0.1524" layer="91"/>
@@ -4799,7 +4799,7 @@ EC12E series with push-on switch</description>
 <wire x1="50.8" y1="22.86" x2="15.24" y2="22.86" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$21" class="0">
+<net name="N$16" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="CLK"/>
 <wire x1="93.98" y1="58.42" x2="68.58" y2="58.42" width="0.1524" layer="91"/>
