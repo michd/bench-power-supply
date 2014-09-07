@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="7.1.0">
+<eagle version="6.5.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -5576,7 +5576,7 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <wire x1="264.16" y1="48.26" x2="264.16" y2="45.72" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="VCC" class="0">
+<net name="N$4" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="VCC@1"/>
 <pinref part="P+2" gate="VCC" pin="VCC"/>
@@ -5818,7 +5818,7 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <wire x1="243.84" y1="63.5" x2="266.7" y2="63.5" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$39" class="0">
+<net name="N$7" class="0">
 <segment>
 <pinref part="IC2" gate="G$1" pin="PB0(ICP)"/>
 <wire x1="132.08" y1="60.96" x2="236.22" y2="60.96" width="0.1524" layer="91"/>
