@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="7.1.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -5758,7 +5758,7 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <junction x="220.98" y="116.84"/>
 </segment>
 </net>
-<net name="N$34" class="0">
+<net name="N$5" class="0">
 <segment>
 <pinref part="R7" gate="G$1" pin="1"/>
 <wire x1="208.28" y1="121.92" x2="203.2" y2="121.92" width="0.1524" layer="91"/>
