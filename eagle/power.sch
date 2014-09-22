@@ -11521,7 +11521,7 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <busses>
 </busses>
 <nets>
-<net name="N$1" class="0">
+<net name="N$3" class="0">
 <segment>
 <pinref part="C1" gate="G$1" pin="+"/>
 <wire x1="5.08" y1="76.2" x2="5.08" y2="78.74" width="0.1524" layer="91"/>
@@ -11669,7 +11669,7 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <wire x1="-10.16" y1="45.72" x2="-10.16" y2="43.18" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$3" class="0">
+<net name="N$10" class="0">
 <segment>
 <pinref part="IC2" gate="1" pin="ADJ"/>
 <wire x1="53.34" y1="81.28" x2="53.34" y2="63.5" width="0.1524" layer="91"/>
