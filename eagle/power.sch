@@ -11448,6 +11448,8 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <part name="SUPPLY10" library="supply2" deviceset="GND" device=""/>
 <part name="X11" library="con-molex" deviceset="22-23-2021" device=""/>
 <part name="SUPPLY11" library="supply2" deviceset="GND" device=""/>
+<part name="X12" library="con-molex" deviceset="22-23-2021" device=""/>
+<part name="SUPPLY12" library="supply2" deviceset="GND" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -11517,6 +11519,9 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <instance part="X11" gate="-1" x="-15.24" y="45.72" rot="R180"/>
 <instance part="X11" gate="-2" x="-15.24" y="48.26" rot="R180"/>
 <instance part="SUPPLY11" gate="GND" x="-10.16" y="40.64"/>
+<instance part="X12" gate="-1" x="157.48" y="132.08"/>
+<instance part="X12" gate="-2" x="157.48" y="129.54"/>
+<instance part="SUPPLY12" gate="GND" x="152.4" y="124.46"/>
 </instances>
 <busses>
 </busses>
@@ -11539,6 +11544,10 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <junction x="27.94" y="78.74"/>
 <junction x="5.08" y="78.74"/>
 <pinref part="X6" gate="-1" pin="KL"/>
+<pinref part="X12" gate="-1" pin="S"/>
+<wire x1="154.94" y1="132.08" x2="27.94" y2="132.08" width="0.1524" layer="91"/>
+<wire x1="27.94" y1="132.08" x2="27.94" y2="99.06" width="0.1524" layer="91"/>
+<junction x="27.94" y="99.06"/>
 </segment>
 </net>
 <net name="GND" class="0">
@@ -11667,6 +11676,12 @@ http://www.fairchildsemi.com/ds/LM/LM7805.pdf</description>
 <pinref part="SUPPLY11" gate="GND" pin="GND"/>
 <wire x1="-12.7" y1="45.72" x2="-10.16" y2="45.72" width="0.1524" layer="91"/>
 <wire x1="-10.16" y1="45.72" x2="-10.16" y2="43.18" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="X12" gate="-2" pin="S"/>
+<pinref part="SUPPLY12" gate="GND" pin="GND"/>
+<wire x1="154.94" y1="129.54" x2="152.4" y2="129.54" width="0.1524" layer="91"/>
+<wire x1="152.4" y1="129.54" x2="152.4" y2="127" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$10" class="0">
