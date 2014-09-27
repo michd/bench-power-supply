@@ -2905,12 +2905,17 @@ design rules under a new name.</description>
 <wire x1="67.31" y1="15.24" x2="67.31" y2="5.08" width="1.016" layer="16"/>
 <wire x1="66.04" y1="33.02" x2="69.85" y2="33.02" width="1.016" layer="16"/>
 <wire x1="71.12" y1="33.02" x2="69.85" y2="33.02" width="1.016" layer="16"/>
-<wire x1="69.85" y1="33.02" x2="67.31" y2="30.48" width="1.016" layer="16"/>
+<wire x1="69.85" y1="33.02" x2="68.58" y2="31.75" width="1.016" layer="16"/>
+<wire x1="68.58" y1="31.75" x2="67.31" y2="30.48" width="1.016" layer="16"/>
 <wire x1="67.31" y1="30.48" x2="67.31" y2="25.4" width="1.016" layer="16"/>
 <wire x1="67.31" y1="25.4" x2="67.31" y2="31.75" width="1.016" layer="16"/>
-<wire x1="67.31" y1="31.75" x2="66.04" y2="33.02" width="1.016" layer="16"/>
+<wire x1="67.31" y1="31.75" x2="66.675" y2="32.385" width="1.016" layer="16"/>
+<wire x1="66.675" y1="32.385" x2="66.04" y2="33.02" width="1.016" layer="16"/>
 <wire x1="66.04" y1="33.02" x2="62.23" y2="33.02" width="1.016" layer="16"/>
 <contactref element="X12" pad="2"/>
+<wire x1="66.675" y1="32.385" x2="68.58" y2="32.385" width="0.8128" layer="16"/>
+<wire x1="68.58" y1="32.385" x2="68.58" y2="31.75" width="0.8128" layer="16"/>
+<wire x1="68.58" y1="31.75" x2="67.945" y2="31.75" width="0.8128" layer="16"/>
 <wire x1="62.23" y1="33.02" x2="61.976" y2="33.02" width="0" layer="19" extent="16-16"/>
 </signal>
 <signal name="N$5">
@@ -3245,7 +3250,7 @@ design rules under a new name.</description>
 <wire x1="54.61" y1="63.5" x2="55.88" y2="64.77" width="0.6096" layer="16"/>
 <wire x1="55.88" y1="63.5" x2="55.88" y2="64.77" width="0.6096" layer="16"/>
 <wire x1="68.58" y1="63.5" x2="68.58" y2="67.31" width="0.6096" layer="16"/>
-<polygon width="0.6096" layer="16">
+<polygon width="0.6096" layer="16" thermals="no">
 <vertex x="43.18" y="67.31"/>
 <vertex x="40.64" y="64.77"/>
 <vertex x="41.91" y="63.5"/>
