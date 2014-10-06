@@ -5359,7 +5359,7 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <part name="IC2" library="atmel" deviceset="MEGA8-P" device="" value="ATMEGA328"/>
 <part name="P+2" library="supply1" deviceset="VCC" device=""/>
 <part name="SUPPLY2" library="supply2" deviceset="GND" device=""/>
-<part name="R2" library="rcl" deviceset="R-EU_" device="0207/10" value="680k"/>
+<part name="R2" library="rcl" deviceset="R-EU_" device="0207/10" value="68k"/>
 <part name="R3" library="rcl" deviceset="R-EU_" device="0207/10" value="10k"/>
 <part name="SUPPLY3" library="supply2" deviceset="GND" device=""/>
 <part name="Q1" library="special" deviceset="XTAL/S" device="" value="16MHz"/>
