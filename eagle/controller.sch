@@ -5383,11 +5383,8 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <part name="R6" library="rcl" deviceset="R-EU_" device="0207/10" value="100k"/>
 <part name="R7" library="rcl" deviceset="R-EU_" device="0207/10" value="47k"/>
 <part name="R8" library="rcl" deviceset="R-EU_" device="0207/10" value="47k"/>
-<part name="R9" library="rcl" deviceset="R-EU_" device="0207/10" value="1k"/>
-<part name="R10" library="rcl" deviceset="R-EU_" device="0207/10" value="1k"/>
-<part name="SUPPLY10" library="supply2" deviceset="GND" device=""/>
 <part name="R11" library="rcl" deviceset="R-EU_" device="0207/10" value="20k"/>
-<part name="R12" library="rcl" deviceset="R-EU_" device="0207/10" value="47k"/>
+<part name="R12" library="rcl" deviceset="R-EU_" device="0207/10" value="100k"/>
 <part name="SUPPLY11" library="supply2" deviceset="GND" device=""/>
 <part name="X4" library="con-molex" deviceset="22-23-2021" device=""/>
 <part name="SUPPLY12" library="supply2" deviceset="GND" device=""/>
@@ -5445,9 +5442,6 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <instance part="R6" gate="G$1" x="162.56" y="86.36"/>
 <instance part="R7" gate="G$1" x="213.36" y="121.92"/>
 <instance part="R8" gate="G$1" x="213.36" y="114.3"/>
-<instance part="R9" gate="G$1" x="218.44" y="96.52" rot="R270"/>
-<instance part="R10" gate="G$1" x="238.76" y="104.14" rot="R180"/>
-<instance part="SUPPLY10" gate="GND" x="218.44" y="86.36"/>
 <instance part="R11" gate="G$1" x="172.72" y="104.14" rot="R90"/>
 <instance part="R12" gate="G$1" x="195.58" y="111.76"/>
 <instance part="SUPPLY11" gate="GND" x="172.72" y="93.98"/>
@@ -5532,11 +5526,6 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 <pinref part="SUPPLY9" gate="GND" pin="GND"/>
 <pinref part="IC4" gate="A" pin="V-"/>
 <wire x1="231.14" y1="88.9" x2="231.14" y2="106.68" width="0.1524" layer="91"/>
-</segment>
-<segment>
-<pinref part="R9" gate="G$1" pin="2"/>
-<pinref part="SUPPLY10" gate="GND" pin="GND"/>
-<wire x1="218.44" y1="91.44" x2="218.44" y2="88.9" width="0.1524" layer="91"/>
 </segment>
 <segment>
 <pinref part="R11" gate="G$1" pin="1"/>
@@ -5773,20 +5762,10 @@ diameter 1.8 mm, horizontal, grid 7.62 mm</description>
 </net>
 <net name="N$36" class="0">
 <segment>
-<pinref part="R9" gate="G$1" pin="1"/>
-<wire x1="218.44" y1="101.6" x2="218.44" y2="104.14" width="0.1524" layer="91"/>
 <pinref part="IC4" gate="A" pin="-IN"/>
 <wire x1="218.44" y1="104.14" x2="218.44" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="218.44" y1="111.76" x2="223.52" y2="111.76" width="0.1524" layer="91"/>
-<pinref part="R10" gate="G$1" pin="2"/>
-<wire x1="233.68" y1="104.14" x2="218.44" y2="104.14" width="0.1524" layer="91"/>
-<junction x="218.44" y="104.14"/>
-</segment>
-</net>
-<net name="N$37" class="0">
-<segment>
-<pinref part="R10" gate="G$1" pin="1"/>
-<wire x1="243.84" y1="104.14" x2="246.38" y2="104.14" width="0.1524" layer="91"/>
+<wire x1="246.38" y1="104.14" x2="218.44" y2="104.14" width="0.1524" layer="91"/>
 <wire x1="246.38" y1="104.14" x2="246.38" y2="114.3" width="0.1524" layer="91"/>
 <pinref part="IC4" gate="A" pin="OUT"/>
 <wire x1="246.38" y1="114.3" x2="238.76" y2="114.3" width="0.1524" layer="91"/>
