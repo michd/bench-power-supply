@@ -3,13 +3,19 @@
 #include "TimerOne.h"
 
 // # Configuration
+#define ADC_REFERENCE_VOLTAGE 5.0
+#define ADC_PRECISION 1024
+
 // Voltage control
 #define COARSE_VOLTAGE_RANGE 30
 #define FINE_VOLTAGE_RANGE 5
 // Adds up to 35V
 #define VOLTAGE_STEP 0.05
 #define CURRENT_STEP 0.005
-// TODO: add calibration values here
+
+// Fine-tune these for measuring calibration
+#define CURRENT_MEASURING_RESISTANCE 1.0
+#define VOLTAGE_MEASURING_MULTIPLIER 7.8
 
 // Display
 #define DISP_INTENSITY 0x8
@@ -102,16 +108,31 @@ void loop() {
 /**
  * Reads voltage from analog input and translates it to the
  * actual voltage value.
+ *
+ * Also depends on readCurrent, as the voltage drop over the
+ * current measuring resistors needs to be subtracted from
+ * the voltage read.
  * 
  * Value from ADC ranges 0-1023, which maps to 0-39V at 
  * 0.038V precision.
  * 
  * Value is rounded to the nearest 0.05V.
  *
- * @todo implement.
+ * @todo test.
  */
 float readVoltage() {
-  return 0.0;
+  int inputValue = analogRead(AI_MEASURE_VOLTAGE);
+  
+  float resultingVoltage = (
+      (
+        (float) inputValue /
+        (ADC_PRECISION / ADC_REFERENCE_VOLTAGE)
+      ) *
+      VOLTAGE_MEASURING_MULTIPLIER // That is, voltage divider ratio
+    ) -
+    readCurrent() * CURRENT_MEASURING_RESISTANCE;
+    
+  return resultingVoltage;
 }
 
 /**
@@ -123,10 +144,18 @@ float readVoltage() {
  *
  * Actual values should not go far beyond 2.5A. Software limited.
  *
- * @todo implement.
+ * @todo test.
  */
 float readCurrent() {
-  return 0.0;
+  int inputValue = analogRead(AI_MEASURE_CURRENT);
+  
+  float resultingCurrent = (           
+      (float) inputValue / 
+      (ADC_PRECISION / ADC_REFERENCE_VOLTAGE) 
+    ) / 
+    CURRENT_MEASURING_RESISTANCE;
+    
+  return resultingCurrent;
 }
 
 /**
@@ -148,6 +177,7 @@ void writeVoltage() {
  *
  * Can probably use a common helper method for actual displaying.
  * 
+ * @note Should employ a rounding function to round to nearest 0.05V
  * @note This implementation will need extensive testing.
  * @todo Implement.
  */
@@ -161,6 +191,7 @@ void displayVoltage(float voltage) {
  *
  * Can probably use a common helper method for actual displaying.
  *
+ * @note Should employ a rounding function to round to nearest 0.005A
  * @note This implementation will need extensive testing
  * @todo Implement.
  */
