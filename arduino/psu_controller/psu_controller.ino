@@ -6,19 +6,27 @@
 #define ADC_REFERENCE_VOLTAGE 5.0
 #define ADC_PRECISION 1024
 
+// Display
+#define DISP_INTENSITY 0x8
+#define DISP_DIGITS 4
+
 // Voltage control
 #define COARSE_VOLTAGE_RANGE 30
 #define FINE_VOLTAGE_RANGE 5
 // Adds up to 35V
 #define VOLTAGE_STEP 0.05
 #define CURRENT_STEP 0.005
+#define VOLTAGE_DECIMAL_POINTS 2
+#define CURRENT_DECIMAL_POINTS 3
+
+#define VOLTAGE_DISP_OFFSET 0
+#define CURRENT_DISP_OFFSET DISP_DIGITS
 
 // Fine-tune these for measuring calibration
 #define CURRENT_MEASURING_RESISTANCE 1.0
 #define VOLTAGE_MEASURING_MULTIPLIER 7.8
 
-// Display
-#define DISP_INTENSITY 0x8
+
 
 // # Pins
 // I/O board
@@ -170,6 +178,11 @@ float readCurrent() {
 void writeVoltage() {
 }
 
+
+// ########################################################
+// ## Format and display voltage and current on displays ##
+// ########################################################
+
 /**
  * Shows a given float voltage value on the relevant display.
  * 
@@ -181,7 +194,13 @@ void writeVoltage() {
  * @note This implementation will need extensive testing.
  * @todo Implement.
  */
-void displayVoltage(float voltage) {
+void displayVoltage(float voltage)
+{
+  float roundedVoltage = roundToNearest(voltage, VOLTAGE_STEP);
+  signed char digits[DISP_DIGITS];
+  
+  prepareForDisplay(roundedVoltage, VOLTAGE_DECIMAL_POINTS, digits);
+  writeDisplay(VOLTAGE_DISP_OFFSET, VOLTAGE_DECIMAL_POINTS, digits);
 }
 
 /**
@@ -195,7 +214,106 @@ void displayVoltage(float voltage) {
  * @note This implementation will need extensive testing
  * @todo Implement.
  */
-void displayCurrent(float current) {
+void displayCurrent(float current) 
+{
+  float roundedCurrent = roundToNearest(current, CURRENT_STEP);
+  signed char digits[DISP_DIGITS];
+  
+  prepareForDisplay(roundedCurrent, CURRENT_DECIMAL_POINTS, digits);
+  writeDisplay(CURRENT_DISP_OFFSET, CURRENT_DECIMAL_POINTS, digits);
 }
 
+void writeDisplay(char displayOffset, char decimalPoints, signed char* digits)
+{
+  char i;
+  disp.shutdown(0, true);
+  
+  for(i = 0; i < DISP_DIGITS; i += 1)
+  {
+    disp.setDigit(0, i + displayOffset, digits[i], i == (decimalPoints - 1));
+  }
+  
+  disp.shutdown(0, false);
+}
 
+// Below stuff has been tested with gcc on a PC
+
+/**
+ * Rounds a float value to the nearest <rounding>
+ * 
+ * Used to round voltage and current measurements to 0.05V and 0.005A
+ *
+ * @note Only works somewhat reliably with roundings ending in 5
+ * @todo Investigate using some stdlib stuff to make this neater,
+ *       yet still not riddled with floating point errors.
+ */
+float roundToNearest(float input, float rounding)
+{
+  int preMultiplier = 1;
+  int intVersion;
+
+  if (rounding < 1)  preMultiplier = 10;
+  if (rounding < 0.1) preMultiplier = 100;
+  if (rounding < 0.01) preMultiplier = 1000;
+
+  intVersion = (int)(input * preMultiplier);
+
+  int intDivided = (int)((float)intVersion / (rounding * preMultiplier));
+  int remainderInt = (((float)intVersion / (rounding * preMultiplier)) - intDivided) * 10;
+
+  int roundingLeftOver = (int)((float)remainderInt / (rounding * preMultiplier));
+  float roundingRemainder = ((float)remainderInt / (rounding * preMultiplier)) - roundingLeftOver;
+
+  if (roundingRemainder >= ((rounding * preMultiplier) / 2))
+  {
+    roundingLeftOver += 1;
+  }
+
+  int result = (intDivided * (rounding * preMultiplier)) + (roundingLeftOver * (rounding * preMultiplier)); 
+  return (float)result / preMultiplier;
+}
+
+/**
+ * Retrieves digits from a float value, in an array of chars
+ * 
+ * Used for preparing to display float values on 7-segment displays
+ */
+void prepareForDisplay(float input, char decimalPoints, signed char* outDigits)
+{
+  int intInput = (int)(((int)(input * power(10, decimalPoints))) % power(10, DISP_DIGITS));
+  char i;
+  signed char digit;
+  for (i = DISP_DIGITS - 1; i >= 0; i--)
+  {
+    digit = (signed char)(((intInput % power(10, i + 1)) - (intInput % power(10, i))) / power(10, i));
+    // Don't display a digit at [X]x.xx if [X] is 0
+    if (digit == 0 && i == (decimalPoints + 1))
+    {
+      digit = -1;
+    }
+    outDigits[i] = digit;
+  }
+}
+
+/**
+ * Integer implementation of pow
+ */
+int power(int base, int exp)
+{
+  int i;
+  int result;
+
+  if (exp == 0)
+  {
+    return 1;
+  }
+
+  result = base;
+
+  for (i = 1; i < exp; i++)
+  {
+    result = result * base;
+  }
+
+  return result;
+}
