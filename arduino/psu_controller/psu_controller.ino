@@ -11,6 +11,7 @@
 #define DISP_DIGITS 4
 
 // Voltage control
+#define REGULATOR_VOLTAGE_OFFSET 2.25
 #define COARSE_VOLTAGE_RANGE 30
 #define FINE_VOLTAGE_RANGE 5
 // Adds up to 35V
@@ -23,10 +24,8 @@
 #define CURRENT_DISP_OFFSET DISP_DIGITS
 
 // Fine-tune these for measuring calibration
-#define CURRENT_MEASURING_RESISTANCE 1.0
-#define VOLTAGE_MEASURING_MULTIPLIER 7.8
-
-
+#define CURRENT_MEASURING_RESISTANCE 0.788
+#define VOLTAGE_MEASURING_MULTIPLIER 9.4
 
 // # Pins
 // I/O board
@@ -106,11 +105,16 @@ void setup() {
   
   // Pin modes for PWM outputs for controller voltage and current
   pinMode(PWMO_VOLTAGE_COARSE, OUTPUT);
-  pinMode(PWMO_VOLTAGE_FINE, OUTPUT);
+  pinMode(PWMO_VOLTAGE_FINE, OUTPUT); 
+  Serial.begin(9600);
 }
 
 void loop() {
-  // This will actually do things at some point
+  writeVoltage(10.0);
+  displayVoltage(readVoltage());
+  displayCurrent(readCurrent());
+   
+  delay(500);
 }
 
 /**
@@ -175,10 +179,33 @@ float readCurrent() {
  *
  * @todo implement. 
  */
-void writeVoltage() {
+void writeVoltage(float voltage)
+{
+  voltage -= (float) REGULATOR_VOLTAGE_OFFSET;
+  int coarse = (int)voltage;
+  float fine;
+  if (coarse > COARSE_VOLTAGE_RANGE)
+  {
+    coarse -= (coarse - COARSE_VOLTAGE_RANGE);
+  }
+  
+  fine = voltage - (float) coarse;
+  writeCoarseVoltage(coarse);
+  writeFineVoltage(fine);
 }
 
+void writeCoarseVoltage(int cVoltage)
+{
+  //COARSE_VOLTAGE_RANGE = output 255
+  int cAnalog = (int) ((255.0 / (float) COARSE_VOLTAGE_RANGE) * cVoltage);
+  analogWrite(PWMO_VOLTAGE_COARSE, cAnalog);  
+}
 
+void writeFineVoltage(float fVoltage)
+{
+  int fAnalog = (int) ((255.0 / (float) FINE_VOLTAGE_RANGE) * fVoltage);
+  analogWrite(PWMO_VOLTAGE_FINE, fAnalog);
+}
 // ########################################################
 // ## Format and display voltage and current on displays ##
 // ########################################################
@@ -198,7 +225,6 @@ void displayVoltage(float voltage)
 {
   float roundedVoltage = roundToNearest(voltage, VOLTAGE_STEP);
   signed char digits[DISP_DIGITS];
-  
   prepareForDisplay(roundedVoltage, VOLTAGE_DECIMAL_POINTS, digits);
   writeDisplay(VOLTAGE_DISP_OFFSET, VOLTAGE_DECIMAL_POINTS, digits);
 }
@@ -218,7 +244,6 @@ void displayCurrent(float current)
 {
   float roundedCurrent = roundToNearest(current, CURRENT_STEP);
   signed char digits[DISP_DIGITS];
-  
   prepareForDisplay(roundedCurrent, CURRENT_DECIMAL_POINTS, digits);
   writeDisplay(CURRENT_DISP_OFFSET, CURRENT_DECIMAL_POINTS, digits);
 }
@@ -230,7 +255,7 @@ void writeDisplay(char displayOffset, char decimalPoints, signed char* digits)
   
   for(i = 0; i < DISP_DIGITS; i += 1)
   {
-    disp.setDigit(0, i + displayOffset, digits[i], i == (decimalPoints - 1));
+    disp.setDigit(0, i + displayOffset, digits[i], i == DISP_DIGITS - (decimalPoints + 1));
   }
   
   disp.shutdown(0, false);
@@ -291,7 +316,7 @@ void prepareForDisplay(float input, char decimalPoints, signed char* outDigits)
     {
       digit = -1;
     }
-    outDigits[i] = digit;
+    outDigits[DISP_DIGITS - i - 1] = digit;
   }
 }
 
