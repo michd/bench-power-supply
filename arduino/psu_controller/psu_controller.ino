@@ -3,31 +3,85 @@
 #include "TimerOne.h"
 
 // # Configuration
+// uC properties
 #define ADC_REFERENCE_VOLTAGE 5.0
 #define ADC_PRECISION 1024
+#define PWM_PRECISION 255.0
 
-// Display
+// Display properties
+// Display brightness, 0x0-0xF
 #define DISP_INTENSITY 0x8
+// Number of digits available per display
 #define DISP_DIGITS 4
 
 // Voltage control
+// According to the datasheet this offset should be 1.30V max,
+// but in practice I needed some more
 #define REGULATOR_VOLTAGE_OFFSET 2.25
+
+//Output voltage is controlled with 2 PWM outputs that get summed,
+//Because of PWM precision limitations
 #define COARSE_VOLTAGE_RANGE 30
 #define FINE_VOLTAGE_RANGE 5
-// Adds up to 35V
-#define VOLTAGE_STEP 0.05
-#define CURRENT_STEP 0.005
-#define VOLTAGE_DECIMAL_POINTS 2
-#define CURRENT_DECIMAL_POINTS 3
 
+// Voltage precision of the PSU in Volts,
+// used for rounding measured voltage and stepping through configured voltage
+#define VOLTAGE_STEP 0.05
+// Used for display point
+#define VOLTAGE_DECIMAL_POINTS 2
+// Some software limits here, 2.5 because of REGULATOR_VOLTAGE_OFFSET
+// and rounding
+#define VOLTAGE_TARGET_MINIMUM 2.5
+#define VOLTAGE_TARGET_MAXIMUM 35.0
+// Voltage that gets set on system startup
+#define VOLTAGE_TARGET_INIT VOLTAGE_TARGET_MINIMUM
+
+// Current precision of the PSU in Amps,
+// used for rounding measurements and stepping through current limit value
+#define CURRENT_STEP 0.005
+// Used for display point
+#define CURRENT_DECIMAL_POINTS 3
+// Some software limits here
+#define CURRENT_TARGET_MINIMUM 0.0
+#define CURRENT_TARGET_MAXIMUM 2.5
+// Current limit that gets set on system startup
+#define CURRENT_TARGET_INIT 0.5
+
+// Circumvents advancing two units per notch when turning rotary encoder:
+#define UNITS_PER_ENCODER_NOTCH 2 
+
+// MAX7219CNG sees our two displays as a single 8-digit one, so:
+// Digit index where voltage display starts
 #define VOLTAGE_DISP_OFFSET 0
+// Digit index where current display starts
 #define CURRENT_DISP_OFFSET DISP_DIGITS
 
 // Fine-tune these for measuring calibration
+// Resistance in series with load through which current is measured
+// When measured with a multimeter, this would've been 1.015, yet
+// actual calibration came up with this value.
 #define CURRENT_MEASURING_RESISTANCE 0.788
+// Measured voltage is voltage-divided to stay within the ADC_REFERENCE VOLTAGE
 #define VOLTAGE_MEASURING_MULTIPLIER 9.4
 
+
+
+// For the main loop()
+#define LOOP_CYCLE_DELAY 200
+
+// When in setting mode on a display, revert back to measurement
+// after this many ms
+#define SETTING_DISP_TIMEOUT 3000
+
+// These cycles are used for blinking the display out when in setting mode
+#define DISPLAY_CYCLES 5
+
 // # Pins
+// Legend: [A|PWM]<O|I>_<name>
+// A = analog (for inputs)
+// PWM = pulse width modulation output
+// O = output
+// I = input
 // I/O board
 #define O_DISP_DATA_IN 12
 #define O_DISP_CLOCK   11
@@ -47,37 +101,58 @@
 #define PWMO_VOLTAGE_COARSE 5
 #define PWMO_VOLTAGE_FINE   6
 
-// Set up display controller
+enum displayMode 
+{
+  measurement,
+  setting
+};
+
 LedControl disp = LedControl(
   O_DISP_DATA_IN,
   O_DISP_CLOCK,
   O_DISP_LOAD,
-  1
+  1  
 );
 
 ClickEncoder *voltageKnob;
 ClickEncoder *currentKnob;
 
-float targetVoltage; // 1.50-35.00
-float targetCurrentLimit; //0.000-2.500
+// Voltage meant to be output (V)
+float targetVoltage;
+// Current to limit to. output voltage can and will be lowered
+// to enforce this limit. (A)
+float targetCurrentLimit;
+
+// Latest output voltage measurement (V)
+float voltageMeasurement;
+
+// Latest output current measurement (A)
+float currentMeasurement;
+
+
+displayMode voltageDisplayMode = measurement;
+displayMode currentDisplayMode = measurement;
+
+// Remaining time before display goes back to measurement mode when in setting mode
+int voltageDisplayModeTimeout = 0;
+int currentDisplayModeTimeout = 0;
+
+//Used for blinking display when in setting mode
+char displayCycleStep = 0;
+
 
 //==================================================================
 
-void readEncoders() {
+void readInputs() {
   voltageKnob->service();
   currentKnob->service();
-  // NOTE: Since this is triggered 1000 times per second,
-  // it might be a good idea to read current and voltage
-  // from here, if possible.
-  // If I were to do this though, it'd be good to not convert
-  // the int readout to a float, to save cycles. When
-  // changing target voltage and target current, their values
-  // should also be stored in the relevant int form, for more
-  // efficient comparison with read values.
-  // Also uh, I guess readEncoders wouldn't be a very accurate name.
+  
+  currentMeasurement = readCurrent();
+  voltageMeasurement = readVoltage();
 }
 
 void setup() {
+  
   // Initialize rotary encoders
   voltageKnob = new ClickEncoder(
     I_ROTA_VOLTAGE,
@@ -95,9 +170,13 @@ void setup() {
   disp.setIntensity(0, DISP_INTENSITY);
   disp.clearDisplay(0);
   
+  targetVoltage = VOLTAGE_TARGET_INIT;
+  targetCurrentLimit = CURRENT_TARGET_INIT;
+  
   // Set up timer for reading rotary encoders
+  // and voltage/current measurements
   Timer1.initialize(1000);
-  Timer1.attachInterrupt(readEncoders);
+  Timer1.attachInterrupt(readInputs);
   
   //Pin modes for measuring voltage and current
   pinMode(AI_MEASURE_VOLTAGE, INPUT);
@@ -106,15 +185,73 @@ void setup() {
   // Pin modes for PWM outputs for controller voltage and current
   pinMode(PWMO_VOLTAGE_COARSE, OUTPUT);
   pinMode(PWMO_VOLTAGE_FINE, OUTPUT); 
+
+  // Makes displays work for some reason.
+  // TODO: figure out why and elimate need for Serial in here
   Serial.begin(9600);
 }
 
 void loop() {
-  writeVoltage(10.0);
-  displayVoltage(readVoltage());
-  displayCurrent(readCurrent());
-   
-  delay(500);
+  int voltageKnobDiff = (int)(voltageKnob->getValue() / UNITS_PER_ENCODER_NOTCH);
+  int currentKnobDiff = (int)(currentKnob->getValue() / UNITS_PER_ENCODER_NOTCH);
+  
+  // Voltage knob moved
+  if (voltageKnobDiff != 0)
+  {    
+    voltageDisplayMode = setting; 
+    adjustTargetVoltage(voltageKnobDiff);
+    voltageDisplayModeTimeout = SETTING_DISP_TIMEOUT;
+  }
+  
+  // Voltage knob button clicked
+  if (voltageKnob->getButton() == ClickEncoder::Clicked)
+  {
+    voltageDisplayMode = setting;
+    voltageDisplayModeTimeout = SETTING_DISP_TIMEOUT;
+  }
+  
+  // Current knob moved
+  if (currentKnobDiff != 0)
+  {
+    currentDisplayMode = setting;
+    adjustTargetCurrentLimit(currentKnobDiff);
+    currentDisplayModeTimeout = SETTING_DISP_TIMEOUT;
+  }
+  
+  // Current knob button clicked
+  if (currentKnob->getButton() == ClickEncoder::Clicked)
+  {
+    currentDisplayMode = setting;
+    currentDisplayModeTimeout = SETTING_DISP_TIMEOUT;
+  }
+  
+  updateDisplays();
+
+  delay(LOOP_CYCLE_DELAY);
+}
+
+/**
+ * Adjust the target voltage by a given number of steps
+ *
+ * Constrains the target voltage to a minimum and maximum
+ */
+void adjustTargetVoltage(int steps)
+{
+  targetVoltage += (steps * VOLTAGE_STEP);
+  if (targetVoltage < VOLTAGE_TARGET_MINIMUM) targetVoltage = VOLTAGE_TARGET_MINIMUM;
+  if (targetVoltage > VOLTAGE_TARGET_MAXIMUM) targetVoltage = VOLTAGE_TARGET_MAXIMUM;
+}
+
+/**
+ * Adjust the target current limit by a given number of steps
+ *
+ * Constrains the target current to a minimum and maximum
+ */
+void adjustTargetCurrentLimit(int steps)
+{
+  targetCurrentLimit += (steps * CURRENT_STEP);
+  if (targetCurrentLimit < CURRENT_TARGET_MINIMUM) targetCurrentLimit = CURRENT_TARGET_MINIMUM;
+  if (targetCurrentLimit > CURRENT_TARGET_MAXIMUM) targetCurrentLimit = CURRENT_TARGET_MAXIMUM;
 }
 
 /**
@@ -129,8 +266,6 @@ void loop() {
  * 0.038V precision.
  * 
  * Value is rounded to the nearest 0.05V.
- *
- * @todo test.
  */
 float readVoltage() {
   int inputValue = analogRead(AI_MEASURE_VOLTAGE);
@@ -142,7 +277,7 @@ float readVoltage() {
       ) *
       VOLTAGE_MEASURING_MULTIPLIER // That is, voltage divider ratio
     ) -
-    readCurrent() * CURRENT_MEASURING_RESISTANCE;
+    currentMeasurement * CURRENT_MEASURING_RESISTANCE;
     
   return resultingVoltage;
 }
@@ -155,8 +290,6 @@ float readVoltage() {
  * 0.005 precision, which we'll keep.
  *
  * Actual values should not go far beyond 2.5A. Software limited.
- *
- * @todo test.
  */
 float readCurrent() {
   int inputValue = analogRead(AI_MEASURE_CURRENT);
@@ -171,17 +304,30 @@ float readCurrent() {
 }
 
 /**
+ * Intermediate function for writeVoltage, adjusts voltage for current limiting
+ */
+void adjustOutput()
+{
+  float outputVoltage = targetVoltage;
+  float currentMeasuringVoltageDrop = (float) (currentMeasurement * CURRENT_MEASURING_RESISTANCE);
+  float estimatedLoadResistance = voltageMeasurement / currentMeasurement;
+  
+  if (targetCurrentLimit - currentMeasurement < -CURRENT_STEP)
+  {
+      outputVoltage = (targetCurrentLimit * estimatedLoadResistance);
+  }
+  writeVoltage(outputVoltage);
+}
+  
+
+/**
  * Sets the control voltage, connected to voltage adjust pins on
  * regulators.
- *
- * Takes into account measured current and target current limit first,
- * and target voltage second.
- *
- * @todo implement. 
  */
 void writeVoltage(float voltage)
 {
   voltage -= (float) REGULATOR_VOLTAGE_OFFSET;
+   
   int coarse = (int)voltage;
   float fine;
   if (coarse > COARSE_VOLTAGE_RANGE)
@@ -196,30 +342,100 @@ void writeVoltage(float voltage)
 
 void writeCoarseVoltage(int cVoltage)
 {
-  //COARSE_VOLTAGE_RANGE = output 255
-  int cAnalog = (int) ((255.0 / (float) COARSE_VOLTAGE_RANGE) * cVoltage);
+  int cAnalog = (int) ((PWM_PRECISION / (float) COARSE_VOLTAGE_RANGE) * cVoltage);
   analogWrite(PWMO_VOLTAGE_COARSE, cAnalog);  
 }
 
 void writeFineVoltage(float fVoltage)
 {
-  int fAnalog = (int) ((255.0 / (float) FINE_VOLTAGE_RANGE) * fVoltage);
+  int fAnalog = (int) ((PWM_PRECISION / (float) FINE_VOLTAGE_RANGE) * fVoltage);
   analogWrite(PWMO_VOLTAGE_FINE, fAnalog);
 }
+
 // ########################################################
 // ## Format and display voltage and current on displays ##
 // ########################################################
 
 /**
+ * Updates voltage and current displays with their relevant values.
+ *
+ * Takes into account whether the display is in measure or setting mode
+ * When in setting mode: 
+ *   - Blinks the display out every 5 times this is called
+ *   - Reverts to measurement mode after a timeout
+ */
+void updateDisplays()
+{
+  // Voltage display mode control
+  if (voltageDisplayMode == setting)
+  {
+    voltageDisplayModeTimeout -= LOOP_CYCLE_DELAY;
+    if (voltageDisplayModeTimeout <= 0)
+    {
+      voltageDisplayModeTimeout = 0;
+      voltageDisplayMode = measurement;
+    }
+  }
+  
+  // Current display mode control0
+  if (currentDisplayMode == setting)
+  {
+    currentDisplayModeTimeout -= LOOP_CYCLE_DELAY;
+    if (currentDisplayModeTimeout <= 0)
+    {
+      currentDisplayModeTimeout = 0;
+      currentDisplayMode = measurement;
+    }
+  }
+  
+  // Voltage display
+  if (voltageDisplayMode == setting)
+  {
+    if (displayCycleStep == 0)
+    {
+      clearDisplay(VOLTAGE_DISP_OFFSET);
+    }
+    else
+    {
+      displayVoltage(targetVoltage);
+    }
+  }
+  else
+  {
+    displayVoltage(voltageMeasurement);
+  }
+  
+  // Current display
+  if (currentDisplayMode == setting)
+  {
+    if (displayCycleStep == 0)
+    {
+      clearDisplay(CURRENT_DISP_OFFSET);
+    }
+    else
+    {
+      displayCurrent(targetCurrentLimit);
+    }
+  }
+  else
+  {
+    displayCurrent(currentMeasurement);
+  }
+  
+  // Advance display cycle
+  displayCycleStep += 1;
+  if (displayCycleStep == DISPLAY_CYCLES)
+  {
+    displayCycleStep = 0;
+  }
+}
+
+/**
  * Shows a given float voltage value on the relevant display.
  * 
- * Should display it in format [X]X.XX
- *
- * Can probably use a common helper method for actual displaying.
- * 
- * @note Should employ a rounding function to round to nearest 0.05V
- * @note This implementation will need extensive testing.
- * @todo Implement.
+ * Displays in format [X]X.XX
+ * @todo Fix bug where first digit remains when no update is available
+ *       Should be blanked instead.
  */
 void displayVoltage(float voltage)
 {
@@ -232,13 +448,7 @@ void displayVoltage(float voltage)
 /**
  * Shows a given float current value on the relevant display.
  *
- * Should display it in format X.XXX
- *
- * Can probably use a common helper method for actual displaying.
- *
- * @note Should employ a rounding function to round to nearest 0.005A
- * @note This implementation will need extensive testing
- * @todo Implement.
+ * Display it in format X.XXX
  */
 void displayCurrent(float current) 
 {
@@ -254,8 +464,24 @@ void writeDisplay(char displayOffset, char decimalPoints, signed char* digits)
   disp.shutdown(0, true);
   
   for(i = 0; i < DISP_DIGITS; i += 1)
+  {     
+    disp.setDigit(0, i + displayOffset, (digits[i] == -1 ? ' ' : digits[i]), i == DISP_DIGITS - (decimalPoints + 1));
+  }
+  
+  disp.shutdown(0, false);
+}
+
+/**
+ * Clear a single display by writing space characters to every digit
+ */
+void clearDisplay(char displayOffset)
+{
+  char i;
+  disp.shutdown(0, true);
+  
+  for(i = 0; i < DISP_DIGITS; i++)
   {
-    disp.setDigit(0, i + displayOffset, digits[i], i == DISP_DIGITS - (decimalPoints + 1));
+    disp.setDigit(0, i + displayOffset, ' ', false);
   }
   
   disp.shutdown(0, false);
