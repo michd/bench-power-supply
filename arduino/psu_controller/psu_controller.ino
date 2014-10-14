@@ -21,8 +21,8 @@
 
 //Output voltage is controlled with 2 PWM outputs that get summed,
 //Because of PWM precision limitations
-#define COARSE_VOLTAGE_RANGE 30
-#define FINE_VOLTAGE_RANGE 5
+#define COARSE_VOLTAGE_RANGE 29.170
+#define FINE_VOLTAGE_RANGE 5.0
 
 // Voltage precision of the PSU in Volts,
 // used for rounding measured voltage and stepping through configured voltage
@@ -34,7 +34,7 @@
 #define VOLTAGE_TARGET_MINIMUM 2.5
 #define VOLTAGE_TARGET_MAXIMUM 35.0
 // Voltage that gets set on system startup
-#define VOLTAGE_TARGET_INIT VOLTAGE_TARGET_MINIMUM
+#define VOLTAGE_TARGET_INIT 5
 
 // Current precision of the PSU in Amps,
 // used for rounding measurements and stepping through current limit value
@@ -45,10 +45,10 @@
 #define CURRENT_TARGET_MINIMUM 0.0
 #define CURRENT_TARGET_MAXIMUM 2.5
 // Current limit that gets set on system startup
-#define CURRENT_TARGET_INIT 0.5
+#define CURRENT_TARGET_INIT 0.25
 
 // Circumvents advancing two units per notch when turning rotary encoder:
-#define UNITS_PER_ENCODER_NOTCH 2 
+#define UNITS_PER_ENCODER_NOTCH 1
 
 // MAX7219CNG sees our two displays as a single 8-digit one, so:
 // Digit index where voltage display starts
@@ -65,14 +65,14 @@
 #define VOLTAGE_MEASURING_MULTIPLIER 9.4
 
 // For the main loop()
-#define LOOP_CYCLE_DELAY 200
+#define LOOP_CYCLE_DELAY 100
 
 // When in setting mode on a display, revert back to measurement
 // after this many ms
 #define SETTING_DISP_TIMEOUT 3000
 
 // These cycles are used for blinking the display out when in setting mode
-#define DISPLAY_CYCLES 5
+#define DISPLAY_CYCLES 4
 
 // # Pins
 // Legend: [A|PWM]<O|I>_<name>
@@ -137,6 +137,13 @@ int currentDisplayModeTimeout = 0;
 //Used for blinking display when in setting mode
 char displayCycleStep = 0;
 
+//==================================================================
+
+// Bugs to fix after initial round of testing:
+// - Setting current limit to 0 breaks limit, raises voltage
+// - Clicking current button doesn't do anything (should toggle display mode)
+// - Measurements on display look very jittery, changing up to .25 every frame
+// - More calibrating needs to be done
 
 //==================================================================
 
@@ -146,6 +153,7 @@ void readInputs() {
   
   currentMeasurement = readCurrent();
   voltageMeasurement = readVoltage();
+  adjustOutput();
 }
 
 void setup() {  
@@ -155,6 +163,8 @@ void setup() {
     I_ROTB_VOLTAGE,
     I_BTN_VOLTAGE
   );
+  
+  voltageKnob->setAccelerationEnabled(true);
   
   currentKnob = new ClickEncoder(
     I_ROTA_CURRENT,
@@ -190,6 +200,9 @@ void setup() {
 void loop() {
   int voltageKnobDiff = (int)(voltageKnob->getValue() / UNITS_PER_ENCODER_NOTCH);
   int currentKnobDiff = (int)(currentKnob->getValue() / UNITS_PER_ENCODER_NOTCH);
+  
+  voltageKnobDiff *= abs(voltageKnobDiff);
+  currentKnobDiff *= abs(currentKnobDiff);
   
   // Voltage knob moved
   if (voltageKnobDiff != 0) {    
@@ -437,7 +450,7 @@ void writeDisplay(char displayOffset, char decimalPoints, signed char* digits) {
   disp.shutdown(0, true);
   
   for(i = 0; i < DISP_DIGITS; i += 1) {     
-    disp.setDigit(
+    disp.setChar(
       0,
       i + displayOffset,
       (digits[i] == -1 ? ' ' : digits[i]),
@@ -455,9 +468,27 @@ void clearDisplay(char displayOffset) {
   char i;
   disp.shutdown(0, true);
   
-  for(i = 0; i < DISP_DIGITS; i++) disp.setDigit(0, i + displayOffset, ' ', false);
+  for(i = 0; i < DISP_DIGITS; i++) disp.setChar(0, i + displayOffset, ' ', false);
   
   disp.shutdown(0, false);
+}
+
+char getCharDigit(signed char digit)
+{
+  switch(digit)
+  {
+    case -1: return ' ';
+    case 0: return '0';
+    case 1: return '1';
+    case 2: return '2';
+    case 3: return '3';
+    case 4: return '4';
+    case 5: return '5';
+    case 6: return '6';
+    case 7: return '7';
+    case 8: return '8';
+    case 9: return '9';
+  }
 }
 
 /**
@@ -504,7 +535,7 @@ void prepareForDisplay(float input, char decimalPoints, signed char* outDigits) 
     digit = (signed char)(((intInput % power(10, i + 1)) - (intInput % power(10, i))) / power(10, i));
     // Don't display a digit at [X]x.xx if [X] is 0
     if (digit == 0 && i == (decimalPoints + 1)) digit = -1;
-    outDigits[DISP_DIGITS - i - 1] = digit;
+    outDigits[DISP_DIGITS - i - 1] = getCharDigit(digit);
   }
 }
 
