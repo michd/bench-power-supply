@@ -1,0 +1,53 @@
+Dimensions as seen from front; 0,0 is in top left
+
+
+## IO board
+
+Width: 119.1mm
+Height: 56.7mm
+
+Holes spacing:
+Horizontal (width-wise): 113mm
+Vertical (height-wise): 51.4mm
+Diameter: 2mm
+Margin around holes: 3mm
+
+## Power board
+
+Width:  99.2mm
+Height: 74.4mm
+
+Hole spacing:
+Horizontal (width-wise): 90.2mm
+Vertical (height-wise): 67.3mm
+Diameter: 3mm
+Margin around holes: 3.3mm
+
+## Controller board
+
+Width: 77.8mm
+Height: 67.4mm
+
+Holes spacing:
+Horizontal (width-wise): 71.4mm
+Vertical (height-wise): 61.6mm
+Diameter: 2mm
+Margin around holes: 2.5mm
+
+## Main transformer
+
+Width: 89.10mm
+Height: 75.0mm
+Depth: 64.2mm
+Screwhole bottom offset: 8.5mm
+Narrow side screwhole side offset: 8.5mm
+Wide side screwhole side offset: 15.5mm
+screwhole width: 4.5mm
+Through-holes locations: 57.25x70.5mm, d: 5mm
+
+
+# Box
+
+inner Width: 150mm
+inside holes: 154mm x 90mm  spacing
+hole diameter: 154mm
